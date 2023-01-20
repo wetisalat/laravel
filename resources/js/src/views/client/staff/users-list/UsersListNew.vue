@@ -269,6 +269,10 @@
         </b-badge>
       </template>
 
+      <template #cell(role)="data">
+        {{  data.item.detail.group.name }}
+      </template>
+
       <template #cell()="data">
         <span class="text-nowrap">{{ data.value }}</span>
       </template>
@@ -405,7 +409,9 @@ export default {
           key: 'user', label: 'User',
         },
         'email',
-        'role',
+        {
+          key: 'role', label: 'Group',
+        },
         'plan',
         { key: 'status', label: 'Status' },
         'actions',

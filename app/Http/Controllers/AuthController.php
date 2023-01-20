@@ -91,6 +91,9 @@ class AuthController extends Controller
             'name'  => $request->name,
             'email' => $request->email,
             'password' => bcrypt($request->password),
+            'gender'   => '',
+            'user_id'  => 0,
+            'phone'    => ''
         ]);
 
         if($user->save()) {

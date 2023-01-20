@@ -7,6 +7,7 @@ use App\Http\Controllers\StaffController;
 use App\Http\Controllers\TodoController;
 use App\Http\Controllers\AccountSettingController;
 use App\Http\Controllers\ExpensesController;
+use App\Http\Controllers\GroupController;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,6 +49,7 @@ Route::group([
   Route::put('staff/{id}', [StaffController::class, 'update'])->name('client.staff.update');
   Route::delete('staff/{id}', [StaffController::class, 'destroy'])->name('client.staff.delete');
   Route::delete('staff', [StaffController::class, 'destroyMultiple'])->name('client.staff.deleteMultiple');
+  Route::resource('groups', GroupController::class);
 
   Route::post('account-setting/data', [AccountSettingController::class, 'getData']);
   Route::post('account-setting/save_change', [AccountSettingController::class, 'saveChange']);

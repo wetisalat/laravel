@@ -149,12 +149,18 @@
           >
             <v-select
               v-model="userData.role"
-              :options="roleOptions"
-              :reduce="val => val.value"
+              label="name"
+              :options="groups"
+              :reduce="val => val.id"
               :clearable="false"
               input-id="user-role"
             />
           </b-form-group>
+          <feather-icon
+            v-b-modal.group-modal
+            icon="PlusCircleIcon"
+            size="18"
+          />
         </b-col>
 
       </b-row>
@@ -206,10 +212,68 @@
     >
       Reset
     </b-button>
+
+    <b-modal
+      id="group-modal"
+      ref="group.modal"
+      title="Add New Group"
+      ok-title="submit"
+      cancel-variant="outline-secondary"
+      hide-footer
+    >
+      <validation-observer
+        #default="{ handleSubmit }"
+        ref="groupForm"
+      >
+        <b-form
+          class="p-2"
+          @submit.prevent="handleSubmit(addGroup)"
+        >
+          <validation-provider
+            #default="{ errors }"
+            name="Group Name"
+            rules="required"
+          >
+            <b-form-group
+              label="Group Name"
+              label-for="group-name"
+            >
+              <b-form-input
+                id="group-name"
+                v-model="groupName"
+                autofocus
+                :state="errors.length > 0 ? false:null"
+                trim
+                placeholder=""
+              />
+
+              <b-form-invalid-feedback>
+                {{ errors[0] }}
+              </b-form-invalid-feedback>
+            </b-form-group>
+          </validation-provider>
+          <div class="text-right">
+            <b-button
+              class="mt-2"
+              variant="outline-secondary"
+              @click="hideModal"
+            >Cancel</b-button>
+            <b-button
+              type="submit"
+              class="mt-2"
+              variant="outline-primary"
+            >Submit</b-button>
+          </div>
+        </b-form>
+      </validation-observer>
+    </b-modal>
   </div>
 </template>
 
 <script>
+import { ValidationProvider, ValidationObserver } from 'vee-validate'
+import { required } from '@validations'
+
 import {
   BButton,
   BMedia,
@@ -224,6 +288,9 @@ import {
   BCardHeader,
   BCardTitle,
   BFormCheckbox,
+  BModal,
+  VBModal,
+  BFormInvalidFeedback,
 } from 'bootstrap-vue'
 import { avatarText } from '@core/utils/filter'
 import vSelect from 'vue-select'
@@ -255,14 +322,30 @@ export default {
     BCardHeader,
     BCardTitle,
     BFormCheckbox,
+    BModal,
+    BFormInvalidFeedback,
     vSelect,
     Cleave,
+    ValidationProvider,
+    ValidationObserver,
+  },
+  directives: {
+    'b-modal': VBModal,
   },
   props: {
     userData: {
       type: Object,
       required: true,
     },
+  },
+  data() {
+    return {
+      groups: [],
+      groupName: '',
+
+      // validations
+      required,
+    }
   },
   setup(props) {
     const { resolveUserRoleVariant } = useUsersList()
@@ -333,7 +416,7 @@ export default {
     const toast = useToast()
 
     const onSubmit = () => {
-      store.dispatch('app-user/updateUser', { id: router.currentRoute.params.id, detail_data: props.userData})
+      store.dispatch('app-user/updateUser', { id: router.currentRoute.params.id, detail_data: props.userData })
         .then(response => {
           toast({
             component: ToastificationContent,
@@ -350,12 +433,12 @@ export default {
     }
 
     const reset = () => {
-        props.userData.gender = null;
-	props.userData.firstname = null;
-	props.userData.lastname = null;
-	props.userData.phone = null;
-	props.userData.email = null;
-	props.userData.avatar = null;
+      props.userData.gender = null;
+      props.userData.firstname = null;
+      props.userData.lastname = null;
+      props.userData.phone = null;
+      props.userData.email = null;
+      props.userData.avatar = null;
     }
 
     return {
@@ -380,8 +463,33 @@ export default {
       },
 
       onSubmit,
-      reset
+      reset,
     }
+  },
+  mounted() {
+    this.$store.dispatch('app-user/fetchGroups')
+      .then(response => {
+        this.groups = response.data.groups
+      })
+  },
+  methods: {
+    addGroup() {
+      this.$refs.groupForm.validate().then(success => {
+        if (success) {
+          // Add group API
+          this.$store.dispatch('app-user/addGroup', this.groupName).then(() => {
+            this.$store.dispatch('app-user/fetchGroups')
+              .then(response => {
+                this.groups = response.data.groups
+                this.hideModal()
+              })
+          })
+        }
+      })
+    },
+    hideModal() {
+      this.$refs['group.modal'].hide()
+    },
   },
 }
 </script>

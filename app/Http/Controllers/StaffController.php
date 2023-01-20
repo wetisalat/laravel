@@ -21,7 +21,8 @@ class StaffController extends Controller
      */
     public function index()
     {
-        $users = User::with('roles')->where('user_id', '=', auth()->user()->id)->get();
+        $users = User::with('roles', 'detail.group')->where('user_id', '=', auth()->user()->id)->get();
+
         return response()->json([
             'staffs' => $users
         ]);
@@ -129,8 +130,8 @@ class StaffController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $config = json_decode(file_get_contents('php://input'));
-        $data = json_decode(json_encode($config->detail_data), true);
+        // $config = json_decode(file_get_contents('php://input'));
+        $data = $request->detail_data; // json_decode(json_encode($config->detail_data), true);
         $user = User::find($id);
 
         if(isset($data['avatar']) && str_contains($data['avatar'], ':')){
@@ -160,27 +161,28 @@ class StaffController extends Controller
         }
 
         $user->fill([
-            'gender' => isset($data['gender'])?$data['gender']:$user['gender'],
-            'name'  => (isset($data['firstname'])?$data['firstname']:$user['firstname']) . ' ' . (isset($data['lastname'])?$data['lastname']:$user['lastname']),
+            'gender' => isset($data['gender'])? $data['gender']:$user['gender'],
+            'name'  => (isset($data['firstname']) ? $data['firstname'] :$user['firstname']) . ' ' . (isset($data['lastname']) ? $data['lastname'] : $user['lastname']),
             'firstname' => isset($data['firstname'])?$data['firstname']:$user['firstname'],
             'lastname'  => isset($data['lastname'])?$data['lastname']:$user['lastname'],
-	    'phone' => isset($data['phone'])?$data['phone']:$user['phone'],
+	        'phone' => isset($data['phone'])?$data['phone']:$user['phone'],
         ]);
         $user->save();
 
         try {
             $keys = array_keys($data);
-            $staff = Staff::where('user_id',$id)->first();
+            $staff = Staff::where('user_id', $id)->first();
             if($staff){
             } else {
                 $staff = Staff::create([
-                    'user_id' => $id,
+                    'user_id'   => $id,
+                    'group_id'  => $data['role']
                 ]);
                 $staff = Staff::where('user_id',$id)->first();
             }
 
             $compare_keys = array_keys($staff->toArray());
-
+            \Log::info(array('data' => $keys, 'staff' => $compare_keys));
             foreach ($keys as $key => $value) {
                 if(in_array($value, $compare_keys)){
                     if(str_contains($value, 'salary')){
@@ -189,17 +191,26 @@ class StaffController extends Controller
                     } elseif(str_contains($value, 'date') ){
                         $staff[$value] = isset($data[$value])?date('Y-m-d', strtotime($data[$value])):null;
                     } elseif($value == "user_id"){
+                    } elseif($value === 'role') {
+                        $staff['group_id'] = $data[$value];
                     }
                     else {
                         $staff[$value] = isset($data[$value])?$data[$value]:'';
                     }
                 }
             }
-	    $staff['deleted_at']=null;
+
+            if( ! isset($staff['group_id'])) {
+                $staff['group_id'] = $data['role'];
+            }
+            
+	        $staff['deleted_at']=null;
             $staff->save();
 
         } catch (\Exception $e) {
+            report( $e );
             print ($e->getMessage());
+            // \Log::debug($e->getTrace());
             return response()->json([
                 'message' => 'Error Updating staff'
             ], SymfonyResponse::HTTP_INTERNAL_SERVER_ERROR);

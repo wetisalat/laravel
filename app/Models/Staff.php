@@ -11,6 +11,10 @@ class Staff extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'user_id',
+        'user_id', 'group_id'
     ];
+
+    public function group() {
+        return $this->belongsTo(Group::class);
+    }
 }

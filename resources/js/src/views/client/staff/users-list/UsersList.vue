@@ -326,7 +326,7 @@ export default {
     return {
       filter: null,
       filterOn: [],
-      
+
       // Sidebar
       isAddNewUserSidebarActive,
 

@@ -38,5 +38,21 @@ export default {
           .catch(error => reject(error))
       })
     },
+    fetchGroups(ctx) {
+      return new Promise((resolve, reject) => {
+        axios
+          .get('/api/client/groups')
+          .then(response => resolve(response))
+          .catch(error => reject(error))
+      })
+    },
+    addGroup(ctx, name) {
+      return new Promise((resolve, reject) => {
+        axios
+          .post('/api/client/groups', { name })
+          .then(response => resolve(response))
+          .catch(error => reject(error))
+      })
+    },
   },
 }
