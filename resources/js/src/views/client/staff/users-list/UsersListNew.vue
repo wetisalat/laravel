@@ -270,7 +270,7 @@
       </template>
 
       <template #cell(role)="data">
-        {{ data.item.detail.group ? data.item.detail.group.name : '-' }}
+        {{ data.item.detail !== null ? data.item.detail.group.name : '-' }}
       </template>
 
       <template #cell()="data">
