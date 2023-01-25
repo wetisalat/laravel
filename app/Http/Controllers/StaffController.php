@@ -200,7 +200,7 @@ class StaffController extends Controller
                 }
             }
 
-            if( ! isset($staff['group_id'])) {
+            if(isset($data['role']) && ! empty($data['role']) ) {
                 $staff['group_id'] = $data['role'];
             }
             
